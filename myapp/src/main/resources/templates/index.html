@@ -1,10 +1,254 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Welcome</title>
-    </head>
-    <body>
-        <h1>Welcome Java</h1>
-    </body>
+<head>
+    <meta charset="utf-8">
+    <title>Welcome</title>
+</head>
+<body>
+<h1>Welcome Java</h1>
+<!--<form method="post" enctype="multipart/form-data" id="fileUploadForm">-->
+<!--    데이터 : <input type="text" name="message" value="test hello"><p></p>-->
+<!--    파일 : <input type="file" name="file"><p></p>-->
+<!--    <input type="button" value=" 비동기 요청 " id="asyncButton">-->
+<!--</form>-->
+
+<h3>오늘의 시그널</h3>
+<p>아직 장이 열리지 않았을 경우에 유용한 기능</p>
+<form method="post" id="todayForm">
+    <label for="options">Choose an option:</label>
+    <select name="stock_name" id="Todayoptions">
+        <option value="AAPL">AAPL</option>
+        <option value="AMZN">AMZN</option>
+        <option value="ARKG">ARKG</option>
+        <option value="DIS">DIS</option>
+        <option value="GOOGL">GOOGL</option>
+        <option value="IONQ">IONQ</option>
+        <option value="KO">KO</option>
+        <option value="MCD">MCD</option>
+        <option value="MSFT">MSFT</option>
+        <option value="NVDA">NVDA</option>
+        <option value="PLTR">PLTR</option>
+        <option value="QQQ">QQQ</option>
+        <option value="QQQM">QQQM</option>
+        <option value="QUBT">QUBT</option>
+        <option value="RKLB">RKLB</option>
+        <option value="SCHD">SCHD</option>
+        <option value="SPY">SPY</option>
+        <option value="TSM">TSM</option>
+        <option value="UBER">UBER</option>
+        <option value="XBI">XBI</option>
+    </select>
+    <button type="button" id="todaySubmitButton">Submit</button>
+</form>
+
+<div id="todayResult">여기에 요청 결과가 출력되어야 합니다.</div>
+
+<hr>
+
+<h3>실시간 분석</h3>
+<p>장이 열린 후 주가가 변동되고 있을 때 유용한 기능</p>
+<form method="post" id="realtimeForm">
+    <label for="options">Choose an option:</label>
+    <select name="stock_name" id="Realtimeoptions">
+        <option value="AAPL">AAPL</option>
+        <option value="AMZN">AMZN</option>
+        <option value="ARKG">ARKG</option>
+        <option value="DIS">DIS</option>
+        <option value="GOOGL">GOOGL</option>
+        <option value="IONQ">IONQ</option>
+        <option value="KO">KO</option>
+        <option value="MCD">MCD</option>
+        <option value="MSFT">MSFT</option>
+        <option value="NVDA">NVDA</option>
+        <option value="PLTR">PLTR</option>
+        <option value="QQQ">QQQ</option>
+        <option value="QQQM">QQQM</option>
+        <option value="QUBT">QUBT</option>
+        <option value="RKLB">RKLB</option>
+        <option value="SCHD">SCHD</option>
+        <option value="SPY">SPY</option>
+        <option value="TSM">TSM</option>
+        <option value="UBER">UBER</option>
+        <option value="XBI">XBI</option>
+    </select>
+    현재 주가를 입력하세요 : <input type="text" name="close" value="100"><p></p>
+    <button type="button" id="realtimeSubmitButton">Submit</button>
+</form>
+
+
+
+<div id="loadingDiv" style="display: none; text-align: center;">
+    <p>인공지능이 주식 시그널을 생성 중입니다...  (*시간 최대 10분 소요*)</p>
+    <div class="spinner">
+        <img src="/img/loading.gif">
+    </div> <!-- 로딩 애니메이션 -->
+</div>
+
+<div id="realtimeResult" style="display: none;">
+    <!-- 서버 응답 내용이 여기에 표시됩니다 -->
+</div>
+
+<hr>
+
+
+<script type="text/javascript">
+    var buttons = document.querySelectorAll("button[type=button]");
+
+
+    // 모든 버튼 클릭 시 다른 버튼 비활성화
+    buttons.forEach(function(button) {
+        button.addEventListener("click", function() {
+            buttons.forEach(function(btn) {
+                btn.disabled = true;
+            });
+        });
+    });
+
+    // 오늘의 시그널
+    document.getElementById("todaySubmitButton").addEventListener("click", function () {
+        var form = document.getElementById("todayForm");
+        var formData = new FormData(form);
+        var stockName = formData.get("stock_name");
+        var resultDiv = document.getElementById("todayResult");
+
+        console.log(stockName);
+
+<!--        alert(window.location.host);-->
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/today_service", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+
+        var requestData = JSON.stringify({
+            stockName: stockName,
+        });
+
+        xhr.onload = function () {
+            console.log(xhr.responseText); // 서버 응답 내용 확인
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    var response = JSON.parse(xhr.responseText);
+                    resultDiv.innerHTML =
+                        "시그널 : " + response.signal + "<br>" +
+                        "시그널 생성 기준 날짜 : " + response.date + "<br>" +
+                        response.suggestion;
+
+                        let p = document.createElement('p');
+                        p.innerHTML  = "<hr>" + '지난 시그널과 수익률 ⬇️⬇️⬇️';
+                        resultDiv.appendChild(p);
+
+                        var img_src = "data:image/png;base64," + response.graph;
+                        var img = document.createElement("img");
+                        img.src = img_src;
+                        resultDiv.appendChild(img);
+                } catch (e) {
+                    resultDiv.innerHTML = "응답을 JSON으로 파싱할 수 없습니다.";
+                    console.error(e);
+                }
+            } else {
+                console.error("Error: " + xhr.statusText);
+                resultDiv.innerHTML = "POST는 갔는데 오류가 남.";
+            }
+
+            // 모든 버튼 다시 활성화
+            buttons.forEach(function(btn) {
+                btn.disabled = false;
+            });
+
+        };
+
+        xhr.onerror = function () {
+            resultDiv.innerHTML = "네트워크 오류가 발생했습니다.";
+            buttons.forEach(function(btn) {
+                btn.disabled = false;
+            });
+        };
+
+        xhr.send(requestData);
+    });
+
+
+    // 실시간 분석
+    document.getElementById("realtimeSubmitButton").addEventListener("click", function () {
+        var form = document.getElementById("realtimeForm");
+        var formData = new FormData(form);
+        var stockName = formData.get("stock_name");
+        var close = formData.get("close");
+        var resultDiv = document.getElementById("realtimeResult");
+
+<!--        alert(window.location.host);-->
+
+        var loadingDiv = document.getElementById("loadingDiv"); // 로딩 중 표시할 DIV
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/realtime_service", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+
+        var requestData = JSON.stringify({
+            stockName: stockName,
+            close: close
+        });
+
+        // 로딩 화면 표시
+        loadingDiv.style.display = "block";
+        resultDiv.style.display = "none";
+
+        xhr.onload = function () {
+            // 로딩 화면 숨김
+            loadingDiv.style.display = "none";
+            resultDiv.style.display = "block";
+
+            console.log(xhr.responseText); // 서버 응답 내용 확인
+            if (xhr.status >= 200 && xhr.status < 300) {
+                try {
+                    var response = JSON.parse(xhr.responseText);
+                    resultDiv.innerHTML =
+                        "시그널 : " + response.signal + "<br>" +
+                        response.suggestion;
+
+                    let p = document.createElement('p');
+                    p.innerHTML  = "<hr>" + '지난 시그널과 수익률 ⬇️⬇️⬇️';
+                    resultDiv.appendChild(p);
+
+
+                    var img_src = "data:image/png;base64," + response.graph;
+                    var img = document.createElement("img");
+                    img.src = img_src;
+                    resultDiv.appendChild(img);
+                } catch (e) {
+                    resultDiv.innerHTML = "응답을 JSON으로 파싱할 수 없습니다.";
+                    console.error(e);
+                }
+            } else {
+                console.error("Error: " + xhr.statusText);
+                resultDiv.innerHTML = "POST는 갔는데 오류가 남.";
+            }
+
+            // 모든 버튼 다시 활성화
+            buttons.forEach(function(btn) {
+                btn.disabled = false;
+            });
+        };
+
+        xhr.onerror = function () {
+            // 로딩 화면 숨김
+            loadingDiv.style.display = "none";
+            resultDiv.style.display = "block";
+            resultDiv.innerHTML = "네트워크 오류가 발생했습니다.";
+            buttons.forEach(function(btn) {
+                btn.disabled = false;
+            });
+        };
+
+        xhr.send(requestData);
+    });
+
+    document.getElementById('realtimeForm').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // 폼 제출 방지
+        }
+    });
+
+</script>
+</body>
 </html>
