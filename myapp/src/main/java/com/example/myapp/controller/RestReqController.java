@@ -39,6 +39,19 @@ public class RestReqController {
                 .block(); // 비동기처리를 동기적으로 블록해서 결과를 반환
         return result;
     }
+    @PostMapping("/buysell_service")
+    public ResponseEntity<String> serviceRequest() {
+        String result = webClient.post()
+                .uri("http://localhost:8088/buyNsell") // FastAPI 서버의 주소
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED) // 폼 데이터 설정
+                .retrieve()
+                .bodyToMono(String.class)
+                .block(); // 동기 처리
+
+        System.out.println("result: " +result);
+
+        return ResponseEntity.ok(result);
+    }
 
 
     @PostMapping("/today_service")
