@@ -180,6 +180,7 @@ xhr.onload = function () {
         try {
             var response = JSON.parse(xhr.responseText); // JSON 파싱
             resultDiv.innerHTML =
+                "마지막 update 날짜 : " + response.date + "<br>" +
                 "매수해야 할 주식 종목 (사세요) : " + response.buy + "<br>" +
                 "매도해야 할 주식 종목 (파세요) : " + response.sell + "<br>";
         } catch (e) {
